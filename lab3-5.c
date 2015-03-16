@@ -66,7 +66,7 @@ typedef struct worldObject {
     GLuint program;
 } worldObject;
 
-int nStatic=12;
+int nStatic=4;
 worldObject staticObjects[12];
 
 worldObject *windmill_blades[4];
@@ -118,6 +118,8 @@ void DrawObject(worldObject obj) {
 
     glUniformMatrix4fv(glGetUniformLocation(program, "CameraMatrix"), 1, GL_TRUE, CameraMatrix.m);
     glUniformMatrix4fv(glGetUniformLocation(program, "myMatrix"), 1, GL_TRUE,  obj.matrix.m);
+    //glUniformFloat(glGetUniformLocation(program, "myMatrix"), 1, GL_TRUE,  obj.matrix.m);
+
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, obj.texture[0]);
@@ -143,89 +145,47 @@ void LoadWorld() {
     GLuint spots;
     GLuint maskros512;
 
-    Model *windmill_walls;
-    Model *windmill_roof;
-    Model *windmill_balcony;
-    Model *ground;
-    Model *bunny;
+    Model *wallL;
+    Model *wallLR;
 
     LoadTGATextureSimple("rutor.tga", &texture);
     LoadTGATextureSimple("conc.tga", &conc);
     LoadTGATextureSimple("spots.tga", &spots);
     LoadTGATextureSimple("maskros512.tga", &maskros512);
 
-    windmill_walls = LoadModelPlus("windmill/windmill-walls.obj");
-    windmill_roof = LoadModelPlus("windmill/windmill-roof.obj");
-    windmill_balcony = LoadModelPlus("windmill/windmill-balcony.obj");
-    ground = LoadModelPlus("models/fractal_maze2D.obj");
+    wallL = LoadModelPlus("models/wall-long.obj");
+    wallLR = LoadModelPlus("models/wall-long-m.obj");
 
-    bunny = LoadModelPlus("models/wall-hole-repaired.obj");
-
-    staticObjects[0].model = bunny;
-    staticObjects[0].matrix = T(40, -10, 0);
+    staticObjects[0].model = wallL;
+    staticObjects[0].matrix = T(0, -10, 0); // 40 is good displacement for walls
     staticObjects[0].texture[0] = texture;
     staticObjects[0].texture[1] = spots;
     staticObjects[0].texture[2] =  maskros512;
     staticObjects[0].program = program;
 
-    staticObjects[1].model = windmill_walls;
-    staticObjects[1].matrix = T(0, 0, 0);
+
+    staticObjects[1].model = wallLR;
+    staticObjects[1].matrix = T(0, -10, -40); // 40 is good displacement for walls
     staticObjects[1].texture[0] = texture;
-    staticObjects[1].texture[1] = texture;
-    staticObjects[1].texture[2] = texture;
-    staticObjects[1].program = normalShader;
+    staticObjects[1].texture[1] = spots;
+    staticObjects[1].texture[2] =  maskros512;
+    staticObjects[1].program = program;
 
-    staticObjects[2].model = windmill_roof;
-    staticObjects[2].matrix = T(0, 0, 0);
+
+    staticObjects[2].model = wallL;
+    staticObjects[2].matrix = T(100, -10, 0); // 40 is good displacement for walls
     staticObjects[2].texture[0] = texture;
-    staticObjects[2].texture[1] = texture;
-    staticObjects[2].texture[2] = texture;
-    staticObjects[2].program = normalShader;
+    staticObjects[2].texture[1] = spots;
+    staticObjects[2].texture[2] =  maskros512;
+    staticObjects[2].program = program;
 
-    staticObjects[3].model = windmill_balcony;
-    staticObjects[3].matrix = T(0, 0, 0);
+
+    staticObjects[3].model = wallLR;
+    staticObjects[3].matrix = T(100, -10, -40); // 40 is good displacement for walls
     staticObjects[3].texture[0] = texture;
-    staticObjects[3].texture[1] = texture;
-    staticObjects[3].texture[2] = texture;
-    staticObjects[3].program = normalShader;
-
-    staticObjects[4].model = bunny;
-    staticObjects[4].matrix = T(10, -10, 0);
-    staticObjects[4].texture[0] = texture;
-    staticObjects[4].texture[1] = spots;
-    staticObjects[4].texture[2] = texture;
-    staticObjects[4].program = program;
-
-    staticObjects[5].model = bunny;
-    staticObjects[5].matrix = T(0, -10, 30);
-    staticObjects[5].texture[0] = conc;
-    staticObjects[5].texture[1] = spots;
-    staticObjects[5].texture[2] = texture;
-    staticObjects[5].program = program;
-
-    staticObjects[6].model = bunny;
-    staticObjects[6].matrix = T(-10, -10, -10);
-    staticObjects[6].texture[0] = spots;
-    staticObjects[6].texture[1] = texture;
-    staticObjects[6].texture[2] = texture;
-    staticObjects[6].program = program;
-
-    staticObjects[7].model = skybox;
-    staticObjects[7].matrix = T(-10, 0.5, -10);
-    staticObjects[7].texture[0] = skyTexture;
-    staticObjects[7].texture[1] = texture;
-    staticObjects[7].texture[2] = texture;
-    staticObjects[7].program = skyShader;
-
-    int i;
-    for (i=0; i<4;i++) {
-        windmill_blades[i] = &staticObjects[8+i];
-        staticObjects[8+i].model = windmill_blade;
-        staticObjects[8+i].texture[0] = texture;
-        staticObjects[8+i].texture[1] = texture;
-        staticObjects[8+i].texture[2] = texture;
-        staticObjects[8+i].program = normalShader;
-    }
+    staticObjects[3].texture[1] = spots;
+    staticObjects[3].texture[2] =  maskros512;
+    staticObjects[3].program = program;
 
 
     glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
@@ -248,11 +208,7 @@ void OnTimer(int value)
 void init(void)
 {
    
-    windmill_blade = LoadModelPlus("windmill/blade.obj");   
     skybox = LoadModelPlus("skybox.obj");
-	// vertex buffer object, used for uploading the geometry
-
-	// Reference to shader program
 
 	dumpInfo();
 
@@ -375,34 +331,6 @@ void display(void) {
     for (i = 0; i<nStatic;i++) {
         DrawObject(staticObjects[i]);
     }
-
-    mat4 bladeRot = Rx(ts*2);
-    // Blade 1
-    trans = T(4.5, 9.18, 0);
-
-    mat4 rot = Rx(0);
-    rot = Mult(bladeRot, rot);
-    mat4 comb = Mult( trans, rot);
-
-    windmill_blades[0]->matrix = comb;
-
-    // Blade 2
-    rot = Rx(Pi/2);
-    rot = Mult(bladeRot, rot);
-    comb = Mult( trans, rot);
-    windmill_blades[1]->matrix = comb;
-
-    // Blade 3
-    rot = Rx(Pi);
-    rot = Mult(bladeRot, rot);
-    comb = Mult( trans, rot);
-    windmill_blades[2]->matrix = comb;
-
-    // Blade 4
-    rot = Rx(-Pi/2);
-    rot = Mult(bladeRot, rot);
-    comb = Mult( trans, rot);
-    windmill_blades[3]->matrix = comb;
 
 	glutSwapBuffers();
 }
