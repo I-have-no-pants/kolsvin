@@ -157,12 +157,12 @@ void LoadWorld() {
     windmill_walls = LoadModelPlus("windmill/windmill-walls.obj");
     windmill_roof = LoadModelPlus("windmill/windmill-roof.obj");
     windmill_balcony = LoadModelPlus("windmill/windmill-balcony.obj");
-    ground = LoadModelPlus("cubeplus.obj");
+    ground = LoadModelPlus("models/fractal_maze2D.obj");
 
-    bunny = LoadModelPlus("bunnyplus.obj");
+    bunny = LoadModelPlus("models/wall-hole-repaired.obj");
 
-    staticObjects[0].model = ground;
-    staticObjects[0].matrix = S(100, 0.01, 100);
+    staticObjects[0].model = bunny;
+    staticObjects[0].matrix = T(40, -10, 0);
     staticObjects[0].texture[0] = texture;
     staticObjects[0].texture[1] = spots;
     staticObjects[0].texture[2] =  maskros512;
@@ -190,21 +190,21 @@ void LoadWorld() {
     staticObjects[3].program = normalShader;
 
     staticObjects[4].model = bunny;
-    staticObjects[4].matrix = T(10, 0.5, 0);
+    staticObjects[4].matrix = T(10, -10, 0);
     staticObjects[4].texture[0] = texture;
     staticObjects[4].texture[1] = spots;
     staticObjects[4].texture[2] = texture;
     staticObjects[4].program = program;
 
     staticObjects[5].model = bunny;
-    staticObjects[5].matrix = T(0, 0.5, 30);
+    staticObjects[5].matrix = T(0, -10, 30);
     staticObjects[5].texture[0] = conc;
     staticObjects[5].texture[1] = spots;
     staticObjects[5].texture[2] = texture;
     staticObjects[5].program = program;
 
     staticObjects[6].model = bunny;
-    staticObjects[6].matrix = T(-10, 0.5, -10);
+    staticObjects[6].matrix = T(-10, -10, -10);
     staticObjects[6].texture[0] = spots;
     staticObjects[6].texture[1] = texture;
     staticObjects[6].texture[2] = texture;
