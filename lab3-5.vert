@@ -22,19 +22,19 @@ const float worldTime = 1000;
 void main(void)
 {
     // Notice that this breaks lighting
-    vec4 position = CameraMatrix * myMatrix*vec4(in_Position, 1.0);
+    vec4 position = myMatrix*vec4(in_Position, 1.0);
 
     // Trippy shit going on here
     float distanceSquared = position.x * position.x + position.y*position.y;
-    position.y += 5*sin(distanceSquared*sin(float(worldTime)/143.0)/1000);
+    //position.y += 5*sin(distanceSquared*sin(float(worldTime)/143.0)/1000);
     
     float y = position.y;
     float x = position.x;
     float om = sin(distanceSquared*sin(float(worldTime)/256.0)/5000) * sin(float(worldTime)/200.0);
-    position.y = x*sin(om)+y*cos(om);
-    position.x = x*cos(om)-y*sin(om);
+    //position.y = x*sin(om)+y*cos(om);
+    //position.x = x*cos(om)-y*sin(om);
 
-    gl_Position = projectionMatrix * position;
+    gl_Position = projectionMatrix * CameraMatrix * position;
     pos = vec3(position);
     
     vec3 normal = mat3(myMatrix) * in_Normal;

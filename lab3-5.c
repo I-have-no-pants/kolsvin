@@ -66,7 +66,7 @@ typedef struct worldObject {
     GLuint program;
 } worldObject;
 
-int nStatic=4;
+int nStatic=7;
 worldObject staticObjects[12];
 
 worldObject *windmill_blades[4];
@@ -120,6 +120,7 @@ void DrawObject(worldObject obj) {
     glUniformMatrix4fv(glGetUniformLocation(program, "myMatrix"), 1, GL_TRUE,  obj.matrix.m);
     //glUniformFloat(glGetUniformLocation(program, "myMatrix"), 1, GL_TRUE,  obj.matrix.m);
 
+    glUniform1f(glGetUniformLocation(program, "worldTime"), 1.0);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, obj.texture[0]);
@@ -147,14 +148,16 @@ void LoadWorld() {
 
     Model *wallL;
     Model *wallLR;
+    Model *agdg;
 
-    LoadTGATextureSimple("rutor.tga", &texture);
-    LoadTGATextureSimple("conc.tga", &conc);
-    LoadTGATextureSimple("spots.tga", &spots);
-    LoadTGATextureSimple("maskros512.tga", &maskros512);
+    LoadTGATextureSimple("textures/wall-hole-repaired.tga", &texture);
+    LoadTGATextureSimple("textures/conc.tga", &conc);
+    LoadTGATextureSimple("textures/spots.tga", &spots);
+    LoadTGATextureSimple("textures/maskros512.tga", &maskros512);
 
     wallL = LoadModelPlus("models/wall-long.obj");
     wallLR = LoadModelPlus("models/wall-long-m.obj");
+    agdg = LoadModelPlus("models/agdg.obj");
 
     staticObjects[0].model = wallL;
     staticObjects[0].matrix = T(0, -10, 0); // 40 is good displacement for walls
@@ -188,41 +191,59 @@ void LoadWorld() {
     staticObjects[3].program = program;
 
 
+    staticObjects[4].model = wallL;
+    staticObjects[4].matrix = T(200, -10, 0); // 40 is good displacement for walls
+    staticObjects[4].texture[0] = texture;
+    staticObjects[4].texture[1] = spots;
+    staticObjects[4].texture[2] =  maskros512;
+    staticObjects[4].program = program;
+
+
+    staticObjects[5].model = wallLR;
+    staticObjects[5].matrix = T(200, -10, -40); // 40 is good displacement for walls
+    staticObjects[5].texture[0] = texture;
+    staticObjects[5].texture[1] = spots;
+    staticObjects[5].texture[2] =  maskros512;
+    staticObjects[5].program = program;
+
+    staticObjects[6].model = agdg;
+    staticObjects[6].matrix = T(0, 3, -10); // 40 is good displacement for walls
+    staticObjects[6].texture[0] = texture;
+    staticObjects[6].texture[1] = spots;
+    staticObjects[6].texture[2] =  maskros512;
+    staticObjects[6].program = program;
+
     glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
     glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
     glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
     glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
-
-
 }
 
 
-void OnTimer(int value)
-{
+void OnTimer(int value) {
     glutPostRedisplay();
     glutTimerFunc(20, &OnTimer, value);
 }
 
 
 
-void init(void)
-{
+void init(void) {
    
     skybox = LoadModelPlus("skybox.obj");
 
-	dumpInfo();
+    dumpInfo();
 
-	// GL inits
-	glClearColor(0.5,0.2,0.2,0);
-    
+    // GL inits
+    glClearColor(0.5,0.2,0.2,0);
+
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-	glEnable(GL_DEPTH_TEST);
-	printError("GL inits");
+    glEnable(GL_DEPTH_TEST);
+    printError("GL inits");
 
-	// Load and compile shader
-	skyShader = loadShaders("lab3-3.vert", "lab3-3.frag");
-	printError("init shader");
-	program = loadShaders("lab3-5.vert", "lab3-5.frag");
+    // Load and compile shader
+    skyShader = loadShaders("lab3-3.vert", "lab3-3.frag");
+    printError("init shader");
+    program = loadShaders("lab3-5.vert", "lab3-5.frag");
 
     normalShader = loadShaders("lab3-5.vert", "normal_shader.frag");
 	
@@ -242,7 +263,7 @@ void init(void)
     glUseProgram(normalShader);
     glUniformMatrix4fv(glGetUniformLocation(normalShader, "projectionMatrix"), 1, GL_TRUE, projectionMatrix);
 
-    LoadTGATextureSimple("SkyBox512.tga", &skyTexture);
+    LoadTGATextureSimple("textures/SkyBox512.tga", &skyTexture);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, skyTexture);   
     glUniform1i(glGetUniformLocation(skyShader, "texUnit"), 0); // Texture unit 0
@@ -310,8 +331,8 @@ void display(void) {
     vec3 up = {0,1,0};
     CameraMatrix = lookAtv(CameraPos,VectorAdd(CameraPos,CameraTarget),up);
 
-	// clear the screen
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    // clear the screen
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
     // DRAW SKYBOX
     glDisable(GL_DEPTH_TEST);
@@ -324,26 +345,22 @@ void display(void) {
     DrawModel(skybox, skyShader, "in_Position", "in_Normal", "in_TexCoord");
     glEnable(GL_DEPTH_TEST);
 
-    //glUseProgram(program);
-    //glUniformMatrix4fv(glGetUniformLocation(program, "CameraMatrix"), 1, GL_TRUE, CameraMatrix.m);
-
     int i;
     for (i = 0; i<nStatic;i++) {
         DrawObject(staticObjects[i]);
     }
 
-	glutSwapBuffers();
+    glutSwapBuffers();
 }
 
 
 
-int main(int argc, char *argv[])
-{
-	glutInit(&argc, argv);
-	glutInitContextVersion(3, 2);
+int main(int argc, char *argv[]) {
+    glutInit(&argc, argv);
+    glutInitContextVersion(3, 2);
     glutInitWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-	glutCreateWindow (">Half Life 3");
-	glutDisplayFunc(display); 
-	init ();
-	glutMainLoop();
+    glutCreateWindow (">Half Life 3");
+    glutDisplayFunc(display); 
+    init ();
+    glutMainLoop();
 }

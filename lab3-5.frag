@@ -52,5 +52,6 @@ void main(void)
         specular += specularStr*lightSourcesColorArr[i];
     }
 
-    out_Color =  texture(texUnit1, texCoord) * texture(texUnit0, texCoord) * texture(texUnit2, texCoord) *( vec4(diffuse + specular, 1.0));
+    //out_Color =  texture(texUnit1, texCoord) * texture(texUnit0, texCoord) * texture(texUnit2, texCoord) *( vec4(diffuse + specular, 1.0));
+    out_Color =  texture(texUnit1, texCoord) * ( vec4(diffuse + specular, 1.0));
 }
