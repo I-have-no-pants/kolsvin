@@ -53,5 +53,5 @@ void main(void)
     }
 
     //out_Color =  texture(texUnit1, texCoord) * texture(texUnit0, texCoord) * texture(texUnit2, texCoord) *( vec4(diffuse + specular, 1.0));
-    out_Color =  texture(texUnit1, texCoord) * ( vec4(diffuse + specular, 1.0));
+    out_Color =  texture(texUnit0, texCoord) + texture(texUnit1, vec2(pos.x, pos.y)); // * ( vec4(diffuse + specular, 1.0));
 }

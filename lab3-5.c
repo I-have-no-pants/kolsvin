@@ -142,18 +142,14 @@ void LoadWorld() {
     glUseProgram(program);
 
     GLuint texture;
-    GLuint conc;
-    GLuint spots;
-    GLuint maskros512;
+    GLuint gridTexture;
 
     Model *wallL;
     Model *wallLR;
     Model *agdg;
 
     LoadTGATextureSimple("textures/wall-hole-repaired.tga", &texture);
-    LoadTGATextureSimple("textures/conc.tga", &conc);
-    LoadTGATextureSimple("textures/spots.tga", &spots);
-    LoadTGATextureSimple("textures/maskros512.tga", &maskros512);
+    LoadTGATextureSimple("textures/grid.tga", &gridTexture);
 
     wallL = LoadModelPlus("models/wall-long.obj");
     wallLR = LoadModelPlus("models/wall-long-m.obj");
@@ -162,55 +158,48 @@ void LoadWorld() {
     staticObjects[0].model = wallL;
     staticObjects[0].matrix = T(0, -10, 0); // 40 is good displacement for walls
     staticObjects[0].texture[0] = texture;
-    staticObjects[0].texture[1] = spots;
-    staticObjects[0].texture[2] =  maskros512;
+    staticObjects[0].texture[1] = gridTexture;
     staticObjects[0].program = program;
 
 
     staticObjects[1].model = wallLR;
     staticObjects[1].matrix = T(0, -10, -40); // 40 is good displacement for walls
     staticObjects[1].texture[0] = texture;
-    staticObjects[1].texture[1] = spots;
-    staticObjects[1].texture[2] =  maskros512;
+    staticObjects[1].texture[1] = gridTexture;
     staticObjects[1].program = program;
 
 
     staticObjects[2].model = wallL;
     staticObjects[2].matrix = T(100, -10, 0); // 40 is good displacement for walls
     staticObjects[2].texture[0] = texture;
-    staticObjects[2].texture[1] = spots;
-    staticObjects[2].texture[2] =  maskros512;
+    staticObjects[2].texture[1] = gridTexture;
     staticObjects[2].program = program;
 
 
     staticObjects[3].model = wallLR;
     staticObjects[3].matrix = T(100, -10, -40); // 40 is good displacement for walls
     staticObjects[3].texture[0] = texture;
-    staticObjects[3].texture[1] = spots;
-    staticObjects[3].texture[2] =  maskros512;
+    staticObjects[3].texture[1] = gridTexture;
     staticObjects[3].program = program;
 
 
     staticObjects[4].model = wallL;
     staticObjects[4].matrix = T(200, -10, 0); // 40 is good displacement for walls
     staticObjects[4].texture[0] = texture;
-    staticObjects[4].texture[1] = spots;
-    staticObjects[4].texture[2] =  maskros512;
+    staticObjects[4].texture[1] = gridTexture;
     staticObjects[4].program = program;
 
 
     staticObjects[5].model = wallLR;
     staticObjects[5].matrix = T(200, -10, -40); // 40 is good displacement for walls
     staticObjects[5].texture[0] = texture;
-    staticObjects[5].texture[1] = spots;
-    staticObjects[5].texture[2] =  maskros512;
+    staticObjects[5].texture[1] = gridTexture;
     staticObjects[5].program = program;
 
     staticObjects[6].model = agdg;
     staticObjects[6].matrix = T(0, 3, -10); // 40 is good displacement for walls
     staticObjects[6].texture[0] = texture;
-    staticObjects[6].texture[1] = spots;
-    staticObjects[6].texture[2] =  maskros512;
+    staticObjects[6].texture[1] = gridTexture;
     staticObjects[6].program = program;
 
     glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
