@@ -14,6 +14,8 @@ in float intensity;
 in vec3 out_Normal;
 in vec3 pos;
 
+in float distance;
+
 uniform vec3 lightSourcesDirPosArr[4];
 uniform vec3 lightSourcesColorArr[4];
 uniform float specularExponent[4];
@@ -52,6 +54,10 @@ void main(void)
         specular += specularStr*lightSourcesColorArr[i];
     }
 
-    //out_Color =  texture(texUnit1, texCoord) * texture(texUnit0, texCoord) * texture(texUnit2, texCoord) *( vec4(diffuse + specular, 1.0));
-    out_Color =  texture(texUnit0, texCoord) + texture(texUnit1, vec2(pos.x, pos.y)); // * ( vec4(diffuse + specular, 1.0));
+    vec2 grid = vec2(pos.x, pos.y + pos.z);
+
+    float sDistance=distance;
+
+    //out_Color =  (1-distance) * texture(texUnit1, texCoord) * texture(texUnit0, texCoord) * texture(texUnit2, texCoord) *( vec4(diffuse + specular, 1.0));
+    out_Color =  (1-sDistance) * texture(texUnit0, texCoord) + sDistance * texture(texUnit1, grid); // * ( vec4(diffuse + specular, 1.0));
 }

@@ -149,7 +149,7 @@ void LoadWorld() {
     Model *agdg;
 
     LoadTGATextureSimple("textures/wall-hole-repaired.tga", &texture);
-    LoadTGATextureSimple("textures/grid.tga", &gridTexture);
+    LoadTGATextureSimple("textures/grid2.tga", &gridTexture);
 
     wallL = LoadModelPlus("models/wall-long.obj");
     wallLR = LoadModelPlus("models/wall-long-m.obj");
