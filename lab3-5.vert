@@ -21,19 +21,27 @@ out float distance;
 const vec3 light = vec3(30.58, 30.58, -30.58);
 
 uniform float worldTime;
+uniform float worldLOD;
 
 void main(void)
 {
     // Notice that this breaks lighting
     vec4 position = myMatrix*vec4(in_Position, 1.0);
-    vec4 worldPosition = projectionMatrix * CameraMatrix * position;
+    vec4 worldPosition = CameraMatrix * position;
 
 
     float distanceSquared = worldPosition.z*worldPosition.z + worldPosition.x * worldPosition.x + worldPosition.y*worldPosition.y;
-    distance = distanceSquared*distanceSquared/40000000;
+
+    distanceSquared = length(worldPosition[3]);
+
+    distance = distanceSquared*distanceSquared/4.0;
+    distance = length(worldPosition)*worldLOD;
     float distanceC = clamp(distance , 0, 1);
 
-    mat4 mergedMatrix = (1-distanceC) * myMatrix + distanceC * myLODMatrix;    
+    mat4 sinLOD = myLODMatrix;
+
+    sinLOD[3][1] = myLODMatrix[3][1] + 0*sin(worldTime/400 + myLODMatrix[3][2] + myLODMatrix[3][0]);
+    mat4 mergedMatrix = (1-distanceC)*(1-distanceC) * myMatrix + distanceC*distanceC * sinLOD;    
 
     gl_Position = projectionMatrix * CameraMatrix * mergedMatrix * vec4(in_Position, 1);
 

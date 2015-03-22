@@ -67,8 +67,8 @@ typedef struct worldObject {
     GLuint program;
 } worldObject;
 
-int nStatic=7;
-worldObject staticObjects[12];
+#define nStatic 40
+worldObject staticObjects[nStatic];
 
 worldObject *windmill_blades[4];
 
@@ -123,6 +123,7 @@ void DrawObject(worldObject obj, GLfloat t) {
     //glUniformFloat(glGetUniformLocation(program, "myMatrix"), 1, GL_TRUE,  obj.matrix.m);
 
     glUniform1f(glGetUniformLocation(program, "worldTime"), t);
+    glUniform1f(glGetUniformLocation(program, "worldLOD"), 0.006);
 
     glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
     glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
@@ -163,50 +164,67 @@ void LoadWorld() {
     LoadTGATextureSimple("textures/agdg.tga", &agdgTexture);
     LoadTGATextureSimple("textures/normalmap.tga", &agdgTexture);
 
-    wallL = LoadModelPlus("models/platform.obj");
+    wallL = LoadModelPlus("models/platformGreen.obj");
     wallLR = LoadModelPlus("models/wallpiece.obj");
     agdg = LoadModelPlus("models/agdg.obj");
+
+    Model * BlockGrey = LoadModelPlus("models/BlockGrey.obj");
 
     void SetMaterial(worldObject *o) {
         o->texture[0] = texture;
         o->texture[1] = materialTexture;
         o->program = program;
     }
+
+    int modelN=0;
     
     for (int i=0; i<nStatic;i++) {
         SetMaterial(&staticObjects[i]);
     }
 
-    staticObjects[0].model = wallL;
-    staticObjects[0].matrix = T(0, -10, 0); // 40 is good displacement for walls
-    staticObjects[0].LODmatrix = Mult(T(0, -30, 10), S(0.4,0.4,0.4)); // 40 is good displacement for walls
+    for (int x = 0; x<5;x++) {
 
+        for (int z = 0; z<5;z++) {
 
-    staticObjects[2].model = wallL;
-    staticObjects[2].matrix = T(40, -10, 0); // 40 is good displacement for walls
-    staticObjects[2].LODmatrix = Mult(T(10, -30, 0), S(0.4,0.4,0.4)); // 40 is good displacement for walls
+            staticObjects[modelN].model = wallL;
+            staticObjects[modelN].matrix = T(x*32, -48, z*32); // 40 is good displacement for walls
+            staticObjects[modelN].LODmatrix = Mult(T(x*32, -64, (x+z)*16), S(0.5,0.5,0.5)); // 40 is good displacement for walls
+            modelN++;
+        }
+    }
 
-    staticObjects[4].model = wallL;
-    staticObjects[4].matrix = T(80, -10, 0); // 40 is good displacement for walls
-    staticObjects[4].LODmatrix = Mult(T(30, -30, -10), S(0.4,0.4,0.4)); // 40 is good displacement for walls
+    for (int x = 0; x<5;x++) {
+            staticObjects[modelN].model = wallLR;
+            staticObjects[modelN].matrix = T(x*32, -16, -32);
+            staticObjects[modelN].LODmatrix = Mult(T(x*16, 16, -64), S(0.5,0.5,0.5));
+            modelN++;
+    }
 
-    staticObjects[1].model = wallLR;
-    staticObjects[1].matrix = T(0, -10, -40); // 40 is good displacement for walls
-    staticObjects[1].LODmatrix = Mult(T(0, -10, -50), S(0.4,0.4,0.4)); // 40 is good displacement for walls
+    for (int x = 0; x<5;x++) {
+            staticObjects[modelN].model = BlockGrey;
+            staticObjects[modelN].matrix = Mult(T(x*32, -16, 160), Ry(Pi));
+            staticObjects[modelN].LODmatrix = Mult(T((x/2)*16, ((x+1) /2)*16, 256), Mult(Ry(Pi/2.0), S(0.5,0.5,0.5)));
+            modelN++;
+    }
 
-    staticObjects[3].model = wallLR;
-    staticObjects[3].matrix = T(40, -10, -40); // 40 is good displacement for walls
-    staticObjects[3].LODmatrix = Mult(T(10, -10, -50), S(0.4,0.4,0.4)); // 40 is good displacement for walls
+    for (int x = 0; x<5;x++) {
+            staticObjects[modelN].model = wallL;
+            staticObjects[modelN].matrix = T((x+1)*-32, -64, 64);
+            staticObjects[modelN].LODmatrix = Mult(T(-256, 32+x*16, 64), Mult(Rz(-Pi/2.0), S(0.5,0.5,0.5)));
+            modelN++;
+    }
 
+    //staticObjects[4].LODmatrix = Mult(T(30, -30, -10), Mult(Rz(90), S(0.4,0.4,0.4))); // 40 is good displacement for walls
 
+/*
     staticObjects[5].model = wallLR;
     staticObjects[5].matrix = T(80, -10, -40); // 40 is good displacement for walls
     staticObjects[5].LODmatrix = Mult(T(20, -10, -50), S(0.4,0.4,0.4)); // 40 is good displacement for walls
 
     staticObjects[6].model = agdg;
     staticObjects[6].matrix = T(0, 3, -10); // 40 is good displacement for walls
-    staticObjects[6].LODmatrix = Mult(T(0, -20, 0), S(0.2,0.2,0.2)); // 40 is good displacement for walls
-
+    staticObjects[6].LODmatrix = Mult(T(0, -10, -30), S(0.2,0.2,0.2)); // 40 is good displacement for walls
+*/
 }
 
 
@@ -285,8 +303,8 @@ void init(void) {
 void display(void) {
     printError("pre display");
     // Update animation
-    GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME);
-    GLfloat ts = t*0.003;
+    GLfloat ts = 2;
+    GLfloat t = ts * (GLfloat)glutGet(GLUT_ELAPSED_TIME);
 
     // Camera position
 
@@ -316,7 +334,7 @@ void display(void) {
         Speed = Normalize(Speed);
     }
 
-    CameraPos = VectorAdd(CameraPos, ScalarMult(Speed,0.5f));
+    CameraPos = VectorAdd(CameraPos, ScalarMult(Speed,0.5f * ts));
 
     vec3 up = {0,1,0};
     CameraMatrix = lookAtv(CameraPos,VectorAdd(CameraPos,CameraTarget),up);
