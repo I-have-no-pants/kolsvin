@@ -37,17 +37,17 @@ float mouse_sensitivity = 0.005f;
 #define bottom -0.5
 
 
-Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
-                                 {0.0f, 1.0f, 0.0f}, // Green light
-                                 {0.0f, 0.0f, 1.0f}, // Blue light
-                                 {1.0f, 1.0f, 1.0f} }; // White light
+Point3D lightSourcesColorsArr[] = { {0.9f, 0.9f, 0.9f}, // Red light
+                                 {0.8f, 0.8f, 0.8f}, // Green light
+                                 {0.8f, 0.8f, 0.8f}, // Green light
+                                 {0.0f, 0.0f, 0.0f} }; // White light
 
-GLfloat specularExponent[] = {10.0, 20.0, 60.0, 5.0};
-GLint isDirectional[] = {0,0,1,1};
+GLfloat specularExponent[] = {100.0, 200.0, 600.0, 5.0};
+GLint isDirectional[] = {0,1,1,0};
 
 Point3D lightSourcesDirectionsPositions[] = { {10.0f, 5.0f, 0.0f}, // Red light, positional
-                                       {0.0f, 5.0f, 10.0f}, // Green light, positional
-                                       {-1.0f, 0.0f, 0.0f}, // Blue light along X
+                                       {20.0f, 5.0f, 10.0f}, // Green light, positional
+                                       {-1.0f, 10.0f, -10.0f}, // Blue light along X
                                        {0.0f, 0.0f, -1.0f} }; // White light along Z
 
 
@@ -62,6 +62,7 @@ GLfloat projectionMatrix[] = {    2.0f*near/(right-left), 0.0f, (right+left)/(ri
 typedef struct worldObject {
     Model * model;
     mat4 matrix;
+    mat4 LODmatrix;
     GLuint texture[3];
     GLuint program;
 } worldObject;
@@ -112,15 +113,21 @@ void RotateCamera(int x, int y) {
     glutPassiveMotionFunc(RotateCamera);
 }
 
-void DrawObject(worldObject obj) {
+void DrawObject(worldObject obj, GLfloat t) {
     GLuint program = obj.program;
     glUseProgram(program);
 
     glUniformMatrix4fv(glGetUniformLocation(program, "CameraMatrix"), 1, GL_TRUE, CameraMatrix.m);
     glUniformMatrix4fv(glGetUniformLocation(program, "myMatrix"), 1, GL_TRUE,  obj.matrix.m);
+    glUniformMatrix4fv(glGetUniformLocation(program, "myLODMatrix"), 1, GL_TRUE,  obj.LODmatrix.m);
     //glUniformFloat(glGetUniformLocation(program, "myMatrix"), 1, GL_TRUE,  obj.matrix.m);
 
-    glUniform1f(glGetUniformLocation(program, "worldTime"), 1.0);
+    glUniform1f(glGetUniformLocation(program, "worldTime"), t);
+
+    glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
+    glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
+    glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
+    glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, obj.texture[0]);
@@ -138,74 +145,68 @@ void DrawObject(worldObject obj) {
 }
 
 
+
 void LoadWorld() {
     glUseProgram(program);
 
     GLuint texture;
-    GLuint gridTexture;
+    GLuint agdgTexture;
+    GLuint materialTexture;
+    GLuint normalTexture;
 
     Model *wallL;
     Model *wallLR;
     Model *agdg;
 
-    LoadTGATextureSimple("textures/wall-hole-repaired.tga", &texture);
-    LoadTGATextureSimple("textures/grid2.tga", &gridTexture);
+    LoadTGATextureSimple("textures/palette.tga", &texture);
+    LoadTGATextureSimple("textures/material.tga", &materialTexture);
+    LoadTGATextureSimple("textures/agdg.tga", &agdgTexture);
+    LoadTGATextureSimple("textures/normalmap.tga", &agdgTexture);
 
-    wallL = LoadModelPlus("models/wall-long.obj");
-    wallLR = LoadModelPlus("models/wall-long-m.obj");
+    wallL = LoadModelPlus("models/platform.obj");
+    wallLR = LoadModelPlus("models/wallpiece.obj");
     agdg = LoadModelPlus("models/agdg.obj");
+
+    void SetMaterial(worldObject *o) {
+        o->texture[0] = texture;
+        o->texture[1] = materialTexture;
+        o->program = program;
+    }
+    
+    for (int i=0; i<nStatic;i++) {
+        SetMaterial(&staticObjects[i]);
+    }
 
     staticObjects[0].model = wallL;
     staticObjects[0].matrix = T(0, -10, 0); // 40 is good displacement for walls
-    staticObjects[0].texture[0] = texture;
-    staticObjects[0].texture[1] = gridTexture;
-    staticObjects[0].program = program;
-
-
-    staticObjects[1].model = wallLR;
-    staticObjects[1].matrix = T(0, -10, -40); // 40 is good displacement for walls
-    staticObjects[1].texture[0] = texture;
-    staticObjects[1].texture[1] = gridTexture;
-    staticObjects[1].program = program;
+    staticObjects[0].LODmatrix = Mult(T(0, -30, 10), S(0.4,0.4,0.4)); // 40 is good displacement for walls
 
 
     staticObjects[2].model = wallL;
-    staticObjects[2].matrix = T(100, -10, 0); // 40 is good displacement for walls
-    staticObjects[2].texture[0] = texture;
-    staticObjects[2].texture[1] = gridTexture;
-    staticObjects[2].program = program;
-
-
-    staticObjects[3].model = wallLR;
-    staticObjects[3].matrix = T(100, -10, -40); // 40 is good displacement for walls
-    staticObjects[3].texture[0] = texture;
-    staticObjects[3].texture[1] = gridTexture;
-    staticObjects[3].program = program;
-
+    staticObjects[2].matrix = T(40, -10, 0); // 40 is good displacement for walls
+    staticObjects[2].LODmatrix = Mult(T(10, -30, 0), S(0.4,0.4,0.4)); // 40 is good displacement for walls
 
     staticObjects[4].model = wallL;
-    staticObjects[4].matrix = T(200, -10, 0); // 40 is good displacement for walls
-    staticObjects[4].texture[0] = texture;
-    staticObjects[4].texture[1] = gridTexture;
-    staticObjects[4].program = program;
+    staticObjects[4].matrix = T(80, -10, 0); // 40 is good displacement for walls
+    staticObjects[4].LODmatrix = Mult(T(30, -30, -10), S(0.4,0.4,0.4)); // 40 is good displacement for walls
+
+    staticObjects[1].model = wallLR;
+    staticObjects[1].matrix = T(0, -10, -40); // 40 is good displacement for walls
+    staticObjects[1].LODmatrix = Mult(T(0, -10, -50), S(0.4,0.4,0.4)); // 40 is good displacement for walls
+
+    staticObjects[3].model = wallLR;
+    staticObjects[3].matrix = T(40, -10, -40); // 40 is good displacement for walls
+    staticObjects[3].LODmatrix = Mult(T(10, -10, -50), S(0.4,0.4,0.4)); // 40 is good displacement for walls
 
 
     staticObjects[5].model = wallLR;
-    staticObjects[5].matrix = T(200, -10, -40); // 40 is good displacement for walls
-    staticObjects[5].texture[0] = texture;
-    staticObjects[5].texture[1] = gridTexture;
-    staticObjects[5].program = program;
+    staticObjects[5].matrix = T(80, -10, -40); // 40 is good displacement for walls
+    staticObjects[5].LODmatrix = Mult(T(20, -10, -50), S(0.4,0.4,0.4)); // 40 is good displacement for walls
 
     staticObjects[6].model = agdg;
     staticObjects[6].matrix = T(0, 3, -10); // 40 is good displacement for walls
-    staticObjects[6].texture[0] = texture;
-    staticObjects[6].texture[1] = gridTexture;
-    staticObjects[6].program = program;
+    staticObjects[6].LODmatrix = Mult(T(0, -20, 0), S(0.2,0.2,0.2)); // 40 is good displacement for walls
 
-    glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
-    glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
-    glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
-    glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
 }
 
 
@@ -320,6 +321,10 @@ void display(void) {
     vec3 up = {0,1,0};
     CameraMatrix = lookAtv(CameraPos,VectorAdd(CameraPos,CameraTarget),up);
 
+    lightSourcesDirectionsPositions[0].x = CameraPos.x;
+    lightSourcesDirectionsPositions[0].z = CameraPos.z;
+    lightSourcesDirectionsPositions[0].y = CameraPos.y;
+
     // clear the screen
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
@@ -336,7 +341,7 @@ void display(void) {
 
     int i;
     for (i = 0; i<nStatic;i++) {
-        DrawObject(staticObjects[i]);
+        DrawObject(staticObjects[i], t);
     }
 
     glutSwapBuffers();

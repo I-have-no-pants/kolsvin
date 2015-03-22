@@ -21,11 +21,28 @@ uniform vec3 lightSourcesColorArr[4];
 uniform float specularExponent[4];
 uniform bool isDirectional[4];
 
+const vec4 fogColor = vec4(0,0,0,0);
+
+uniform float worldTime;
 
 void main(void)
 {
     vec4 ambient =vec4(0.1, 0.1, 0.1, 0.1);
-    vec3 normal = normalize(out_Normal);
+    
+    vec2 grid;
+    if (normal.x==0) {
+        grid = vec2(pos.x, pos.y + pos.z);
+    } else {
+        grid = vec2(pos.z, pos.y);
+    }
+
+    vec3 normal = 0.5 * normalize(out_Normal) + 2*vec3(texture(texUnit2, grid));
+    normal = normalize(normal);
+
+    vec4 material = texture(texUnit1, texCoord);
+    float materialDiffuse = material.x;
+    float materialSpecular = material.y;
+    float materialSelfIllumination = material.z; 
 
     vec3 diffuse = vec3(0,0,0);
 
@@ -53,11 +70,12 @@ void main(void)
         specularStr = max(specularStr,0);
         specular += specularStr*lightSourcesColorArr[i];
     }
+    diffuse *= materialDiffuse;
+    specular *= materialSpecular;
 
-    vec2 grid = vec2(pos.x, pos.y + pos.z);
+    vec4 lighting = vec4( diffuse + specular,1)  + vec4(1,1,1,1) * materialSelfIllumination;
 
     float sDistance=distance;
 
-    //out_Color =  (1-distance) * texture(texUnit1, texCoord) * texture(texUnit0, texCoord) * texture(texUnit2, texCoord) *( vec4(diffuse + specular, 1.0));
-    out_Color =  (1-sDistance) * texture(texUnit0, texCoord) + sDistance * texture(texUnit1, grid); // * ( vec4(diffuse + specular, 1.0));
+    out_Color =  (texture(texUnit0, texCoord) * lighting);
 }
