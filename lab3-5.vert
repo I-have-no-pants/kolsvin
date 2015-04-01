@@ -30,18 +30,19 @@ void main(void)
     vec4 worldPosition = CameraMatrix * position;
 
 
-    float distanceSquared = worldPosition.z*worldPosition.z + worldPosition.x * worldPosition.x + worldPosition.y*worldPosition.y;
-
-    distanceSquared = length(worldPosition[3]);
+    float distanceSquared = length(worldPosition[3]);
 
     distance = distanceSquared*distanceSquared/4.0;
-    distance = length(worldPosition)*worldLOD;
+    distance = length(worldPosition);
     float distanceC = clamp(distance , 0, 1);
+
+    distanceC = pow(2.71828, -(distance*distance*distance*distance) / 30000000);
+    distanceC = clamp(distanceC, 0, 1);
 
     mat4 sinLOD = myLODMatrix;
 
     sinLOD[3][1] = myLODMatrix[3][1] + 0*sin(worldTime/400 + myLODMatrix[3][2] + myLODMatrix[3][0]);
-    mat4 mergedMatrix = (1-distanceC)*(1-distanceC) * myMatrix + distanceC*distanceC * sinLOD;    
+    mat4 mergedMatrix = (distanceC) * myMatrix + (1-distanceC) * sinLOD;    
 
     gl_Position = projectionMatrix * CameraMatrix * mergedMatrix * vec4(in_Position, 1);
 

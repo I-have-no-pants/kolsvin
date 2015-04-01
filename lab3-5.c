@@ -62,6 +62,7 @@ GLfloat projectionMatrix[] = {    2.0f*near/(right-left), 0.0f, (right+left)/(ri
 typedef struct worldObject {
     Model * model;
     mat4 matrix;
+    mat4 matrix2;
     mat4 LODmatrix;
     GLuint texture[3];
     GLuint program;
@@ -113,12 +114,29 @@ void RotateCamera(int x, int y) {
     glutPassiveMotionFunc(RotateCamera);
 }
 
+vec3 MatrixTransposeVector(mat4 m) {
+    vec3 v =  {m.m[3], m.m[7], m.m[11]};
+    return v;
+}
+
 void DrawObject(worldObject obj, GLfloat t) {
     GLuint program = obj.program;
     glUseProgram(program);
 
+    mat4 matrix;
+    //vec3 camera = MatrixTransposeVector(CameraMatrix);
+    vec3 camera = CameraPos;
+
+    float v1 = Norm(VectorSub(MatrixTransposeVector(obj.matrix),camera));
+    float v2 = Norm(VectorSub(MatrixTransposeVector(obj.matrix2),camera));
+    
+    if (v1 > v2)
+        matrix = obj.matrix2;
+    else
+        matrix = obj.matrix;
+
     glUniformMatrix4fv(glGetUniformLocation(program, "CameraMatrix"), 1, GL_TRUE, CameraMatrix.m);
-    glUniformMatrix4fv(glGetUniformLocation(program, "myMatrix"), 1, GL_TRUE,  obj.matrix.m);
+    glUniformMatrix4fv(glGetUniformLocation(program, "myMatrix"), 1, GL_TRUE,  matrix.m);
     glUniformMatrix4fv(glGetUniformLocation(program, "myLODMatrix"), 1, GL_TRUE,  obj.LODmatrix.m);
     //glUniformFloat(glGetUniformLocation(program, "myMatrix"), 1, GL_TRUE,  obj.matrix.m);
 
@@ -188,6 +206,7 @@ void LoadWorld() {
 
             staticObjects[modelN].model = wallL;
             staticObjects[modelN].matrix = T(x*32, -48, z*32); // 40 is good displacement for walls
+            staticObjects[modelN].matrix2 = T(x*32, -48, z*32); // 40 is good displacement for walls
             staticObjects[modelN].LODmatrix = Mult(T(x*32, -64, (x+z)*16), S(0.5,0.5,0.5)); // 40 is good displacement for walls
             modelN++;
         }
@@ -196,6 +215,7 @@ void LoadWorld() {
     for (int x = 0; x<5;x++) {
             staticObjects[modelN].model = wallLR;
             staticObjects[modelN].matrix = T(x*32, -16, -32);
+            staticObjects[modelN].matrix2 = T(x*32, -16, -64);
             staticObjects[modelN].LODmatrix = Mult(T(x*16, 16, -64), S(0.5,0.5,0.5));
             modelN++;
     }
@@ -203,6 +223,7 @@ void LoadWorld() {
     for (int x = 0; x<5;x++) {
             staticObjects[modelN].model = BlockGrey;
             staticObjects[modelN].matrix = Mult(T(x*32, -16, 160), Ry(Pi));
+            staticObjects[modelN].matrix2 = Mult(T(x*32, -16, 160), Ry(Pi));
             staticObjects[modelN].LODmatrix = Mult(T((x/2)*16, ((x+1) /2)*16, 256), Mult(Ry(Pi/2.0), S(0.5,0.5,0.5)));
             modelN++;
     }
@@ -210,6 +231,7 @@ void LoadWorld() {
     for (int x = 0; x<5;x++) {
             staticObjects[modelN].model = wallL;
             staticObjects[modelN].matrix = T((x+1)*-32, -64, 64);
+            staticObjects[modelN].matrix2 = T((x+1)*-32, -64, 64);
             staticObjects[modelN].LODmatrix = Mult(T(-256, 32+x*16, 64), Mult(Rz(-Pi/2.0), S(0.5,0.5,0.5)));
             modelN++;
     }
@@ -303,7 +325,7 @@ void init(void) {
 void display(void) {
     printError("pre display");
     // Update animation
-    GLfloat ts = 2;
+    GLfloat ts = 4;
     GLfloat t = ts * (GLfloat)glutGet(GLUT_ELAPSED_TIME);
 
     // Camera position
